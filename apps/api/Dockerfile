@@ -16,4 +16,4 @@ COPY apps/api/ apps/api/
 ENV PORT=3001
 EXPOSE 3001
 
-CMD ["sh", "-c", "cd packages/db && bunx drizzle-kit push && cd /app/apps/api && bun run src/index.ts"]
+CMD ["sh", "-c", "cd packages/db && bunx drizzle-kit push --force && cd /app/apps/api && bun run src/index.ts"]
