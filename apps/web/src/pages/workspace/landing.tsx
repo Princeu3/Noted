@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useSession, useListOrganizations, organization } from "@/lib/auth-client";
 import { api } from "@/lib/api";
@@ -14,6 +14,7 @@ export function Component() {
   const { data: session, isPending } = useSession();
   const { data: orgs, isPending: orgsPending } = useListOrganizations();
   const [checked, setChecked] = useState(false);
+  const settingUp = useRef(false);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -22,7 +23,8 @@ export function Component() {
   }, [session, isPending, navigate]);
 
   useEffect(() => {
-    if (orgsPending || !orgs || !session || checked) return;
+    if (orgsPending || !orgs || !session || checked || settingUp.current) return;
+    settingUp.current = true;
 
     async function setup() {
       // If user has orgs, find first one with spaces and redirect
@@ -77,7 +79,6 @@ export function Component() {
     );
   }
 
-  // User has orgs but no spaces — show empty state (will be handled by layout)
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="text-muted-foreground">Loading...</div>
