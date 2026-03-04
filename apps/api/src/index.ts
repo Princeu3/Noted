@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { auth } from "./auth";
-import { hocuspocus } from "./hocuspocus";
+import { hocuspocus, hocuspocusPort } from "./hocuspocus";
 import { workspacesRouter } from "./routes/workspaces";
 import { pagesRouter } from "./routes/pages";
 import { filesRouter } from "./routes/files";
@@ -73,18 +73,68 @@ app.route("/api", searchRouter);
 app.route("/api", embedsRouter);
 app.route("/api", tasksRouter);
 
-// Start Hocuspocus WebSocket server
+// Start Hocuspocus on internal-only port
 hocuspocus.listen().then(() => {
-  console.log(`Hocuspocus WebSocket server running on port ${hocuspocus.address?.port || process.env.HOCUSPOCUS_PORT || 3002}`);
+  console.log(`Hocuspocus WebSocket server running internally on port ${hocuspocusPort}`);
 }).catch((e: any) => {
   console.error("Hocuspocus listen failed:", e);
 });
 
 const port = parseInt(process.env.PORT || "3001");
 
+// Map to track bidirectional WS proxy connections
+const proxyMap = new WeakMap<object, WebSocket>();
+
 const server = Bun.serve({
   port,
-  fetch: app.fetch,
+  fetch(req, server) {
+    const url = new URL(req.url);
+
+    // Proxy WebSocket upgrades at /collaboration to internal Hocuspocus
+    if (url.pathname === "/collaboration" && req.headers.get("upgrade") === "websocket") {
+      const cookie = req.headers.get("cookie") || "";
+      const success = server.upgrade(req, { data: { cookie } });
+      if (success) return undefined;
+      return new Response("WebSocket upgrade failed", { status: 500 });
+    }
+
+    return app.fetch(req, server);
+  },
+  websocket: {
+    open(ws) {
+      const { cookie } = ws.data as { cookie: string };
+      // Connect to the internal Hocuspocus server, forwarding the cookie
+      const internal = new WebSocket(`ws://127.0.0.1:${hocuspocusPort}/collaboration`, {
+        headers: { cookie },
+      } as any);
+      internal.binaryType = "arraybuffer";
+
+      internal.onmessage = (event) => {
+        try { ws.send(event.data as any); } catch {}
+      };
+      internal.onclose = () => {
+        try { ws.close(); } catch {}
+      };
+      internal.onerror = () => {
+        try { ws.close(); } catch {}
+      };
+
+      proxyMap.set(ws, internal);
+    },
+    message(ws, message) {
+      const internal = proxyMap.get(ws);
+      if (internal?.readyState === WebSocket.OPEN) {
+        internal.send(message);
+      }
+    },
+    close(ws) {
+      const internal = proxyMap.get(ws);
+      if (internal) {
+        internal.close();
+        proxyMap.delete(ws);
+      }
+    },
+  },
 });
 
 console.log(`API server running on http://localhost:${server.port}`);

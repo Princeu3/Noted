@@ -5,8 +5,10 @@ import { eq } from "drizzle-orm";
 import { auth } from "./auth";
 import * as Y from "yjs";
 
+const hocuspocusPort = parseInt(process.env.HOCUSPOCUS_PORT || "4002");
+
 export const hocuspocus = new Server({
-  port: parseInt(process.env.HOCUSPOCUS_PORT || "3002"),
+  port: hocuspocusPort,
   debounce: 2000,
   quiet: true,
 
@@ -91,3 +93,5 @@ export const hocuspocus = new Server({
     console.log(`[Hocuspocus] Disconnected: ${documentName}`);
   },
 });
+
+export { hocuspocusPort };

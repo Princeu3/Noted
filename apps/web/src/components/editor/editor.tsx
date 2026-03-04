@@ -33,10 +33,18 @@ export function Editor({ pageId, userName, userColor = "#6366f1" }: EditorProps)
 
   useEffect(() => {
     const doc = new Y.Doc();
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl =
-      import.meta.env.VITE_HOCUSPOCUS_URL ||
-      `${wsProtocol}//${window.location.host}/collaboration`;
+    const apiUrl = import.meta.env.VITE_API_URL || "";
+    let wsUrl: string;
+    if (import.meta.env.VITE_HOCUSPOCUS_URL) {
+      wsUrl = import.meta.env.VITE_HOCUSPOCUS_URL;
+    } else if (apiUrl) {
+      // Production: connect to API domain's /collaboration endpoint
+      wsUrl = apiUrl.replace(/^http/, "ws") + "/collaboration";
+    } else {
+      // Dev: proxy through Vite
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      wsUrl = `${wsProtocol}//${window.location.host}/collaboration`;
+    }
 
     const provider = new HocuspocusProvider({
       url: wsUrl,
