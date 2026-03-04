@@ -139,7 +139,7 @@ function EditorInner({
       onItemClick: () =>
         insertOrUpdateBlockForSlashMenu(editor, { type: "pdf" as const }),
       aliases: ["pdf", "acrobat"],
-      group: "Media",
+      group: "Documents",
       icon: <FileText className="h-[18px] w-[18px]" />,
       subtext: "Upload and view a PDF inline",
     },
@@ -148,7 +148,7 @@ function EditorInner({
       onItemClick: () =>
         insertOrUpdateBlockForSlashMenu(editor, { type: "docx" as const }),
       aliases: ["doc", "docx", "word"],
-      group: "Media",
+      group: "Documents",
       icon: <FileText className="h-[18px] w-[18px]" />,
       subtext: "Upload and view a Word document inline",
     },
