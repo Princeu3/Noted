@@ -4,7 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
 import { SearchDialog } from "@/components/search/search-dialog";
-import { useSession, useActiveOrganization } from "@/lib/auth-client";
+import { useSession, useActiveOrganization, useListOrganizations, organization } from "@/lib/auth-client";
 import { usePageTree } from "@/hooks/use-page-tree";
 import { api } from "@/lib/api";
 
@@ -24,10 +24,19 @@ export function Component() {
   const { data: session, isPending } = useSession();
   const { workspaceId } = useParams();
   const { data: activeOrg } = useActiveOrganization();
+  const { data: orgs } = useListOrganizations();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [allWorkspaces, setAllWorkspaces] = useState<Workspace[]>([]);
   const [workspaceError, setWorkspaceError] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  async function handleSwitchOrg(orgId: string) {
+    await organization.setActive({ organizationId: orgId });
+    const workspaces = await api<Workspace[]>(`/api/workspaces?orgId=${orgId}`);
+    if (workspaces.length > 0) {
+      navigate(`/w/${workspaces[0].publicId}`, { replace: true });
+    }
+  }
 
   const { pages, refresh } = usePageTree(workspace?.id);
 
@@ -95,6 +104,9 @@ export function Component() {
           workspaceId={workspace?.id}
           workspaceName={workspace?.name}
           allWorkspaces={allWorkspaces}
+          orgs={orgs || []}
+          activeOrgId={activeOrg?.id}
+          onSwitchOrg={handleSwitchOrg}
           onPageCreated={refresh}
         />
         <div className="flex flex-1 flex-col overflow-hidden">

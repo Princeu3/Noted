@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Calendar, ChevronDown, LogOut, Sun, Moon, Monitor, UserPlus } from "lucide-react";
+import { Plus, Calendar, ChevronDown, LogOut, Sun, Moon, Monitor, UserPlus, Building2 } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useTheme } from "@/components/layout/theme-provider";
 import { SidebarPageTree } from "./sidebar-page-tree";
@@ -35,15 +35,24 @@ interface Workspace {
   name: string;
 }
 
+interface Org {
+  id: string;
+  name: string;
+  slug?: string | null;
+}
+
 interface AppSidebarProps {
   pages: PageTreeNode[];
   workspaceId?: number;
   workspaceName?: string;
   allWorkspaces: Workspace[];
+  orgs: Org[];
+  activeOrgId?: string;
+  onSwitchOrg: (orgId: string) => void;
   onPageCreated: () => void;
 }
 
-export function AppSidebar({ pages, workspaceId, workspaceName, allWorkspaces, onPageCreated }: AppSidebarProps) {
+export function AppSidebar({ pages, workspaceId, workspaceName, allWorkspaces, orgs, activeOrgId, onSwitchOrg, onPageCreated }: AppSidebarProps) {
   const navigate = useNavigate();
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
@@ -72,6 +81,29 @@ export function AppSidebar({ pages, workspaceId, workspaceName, allWorkspaces, o
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-3 py-3 space-y-2">
+        {orgs.length > 1 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start gap-2 px-2 h-8">
+                <Building2 className="h-4 w-4 shrink-0" />
+                <span className="truncate text-sm font-semibold">
+                  {orgs.find((o) => o.id === activeOrgId)?.name || "Workspace"}
+                </span>
+                <ChevronDown className="ml-auto h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {orgs.map((org) => (
+                <DropdownMenuItem
+                  key={org.id}
+                  onClick={() => onSwitchOrg(org.id)}
+                >
+                  {org.name} {org.id === activeOrgId && "✓"}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold truncate">
             {workspaceName || "Noted"}

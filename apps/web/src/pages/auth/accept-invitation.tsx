@@ -49,8 +49,10 @@ export function Component() {
       return;
     }
 
-    // Create a personal workspace for the invited user
+    // Set the invited org as active and create a personal workspace
     if (invitation?.orgId) {
+      await organization.setActive({ organizationId: invitation.orgId });
+
       try {
         await api("/api/workspaces", {
           method: "POST",
@@ -59,10 +61,24 @@ export function Component() {
       } catch {
         // Non-critical — they can still use the shared workspace
       }
+
+      // Navigate to the invited org's workspace
+      try {
+        const workspaces = await api<{ publicId: string }[]>(
+          `/api/workspaces?orgId=${invitation.orgId}`
+        );
+        if (workspaces.length > 0) {
+          setStatus("accepted");
+          setTimeout(() => navigate(`/w/${workspaces[0].publicId}`, { replace: true }), 1000);
+          return;
+        }
+      } catch {
+        // Fall through to landing page
+      }
     }
 
     setStatus("accepted");
-    setTimeout(() => navigate("/"), 1500);
+    setTimeout(() => navigate("/", { replace: true }), 1000);
   }
 
   const authQuery = new URLSearchParams({
