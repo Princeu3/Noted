@@ -34,6 +34,7 @@ export const hocuspocus = new Server({
   },
 
   async onLoadDocument({ document, documentName }) {
+    if (documentName.startsWith("presence:")) return;
     const pageId = parseInt(documentName);
     if (isNaN(pageId)) return;
 
@@ -54,10 +55,12 @@ export const hocuspocus = new Server({
   },
 
   async onChange({ documentName, document }) {
+    if (documentName.startsWith("presence:")) return;
     console.log(`[Hocuspocus] onChange: ${documentName}`);
   },
 
   async onStoreDocument({ documentName, document }) {
+    if (documentName.startsWith("presence:")) return;
     const pageId = parseInt(documentName);
     if (isNaN(pageId)) return;
 

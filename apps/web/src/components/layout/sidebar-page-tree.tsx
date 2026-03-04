@@ -15,6 +15,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { FileText, ChevronRight, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { PageTreeNode } from "@/hooks/use-page-tree";
+import { usePresence } from "@/components/presence/presence-provider";
+import { PresenceAvatars } from "@/components/presence/presence-avatars";
 
 interface SidebarPageTreeProps {
   pages: PageTreeNode[];
@@ -56,8 +58,10 @@ function PageTreeItem({
 }) {
   const navigate = useNavigate();
   const { pageId } = useParams();
+  const { usersOnPage } = usePresence();
   const isActive = pageId === page.publicId;
   const hasChildren = page.children.length > 0;
+  const pageUsers = usersOnPage(page.publicId);
 
   async function handleDelete() {
     await api(`/api/pages/${page.publicId}`, { method: "DELETE" });
@@ -91,6 +95,11 @@ function PageTreeItem({
                   <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   <span className="text-sm">{page.icon || ""}</span>
                   <span className="truncate">{page.title}</span>
+                  {pageUsers.length > 0 && (
+                    <span className="ml-auto shrink-0">
+                      <PresenceAvatars users={pageUsers} max={3} size="sm" />
+                    </span>
+                  )}
                 </SidebarMenuButton>
               </CollapsibleTrigger>
             </ContextMenuTrigger>
@@ -124,6 +133,11 @@ function PageTreeItem({
           >
             <FileText className="h-4 w-4" />
             <span className="truncate">{page.title}</span>
+            {pageUsers.length > 0 && (
+              <span className="ml-auto shrink-0">
+                <PresenceAvatars users={pageUsers} max={3} size="sm" />
+              </span>
+            )}
           </SidebarMenuButton>
         </ContextMenuTrigger>
         {contextMenu}

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Outlet, useNavigate, useParams } from "react-router";
+import { Outlet, useNavigate, useParams, useLocation } from "react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
@@ -7,6 +7,8 @@ import { SearchDialog } from "@/components/search/search-dialog";
 import { useSession, useActiveOrganization, useListOrganizations, organization } from "@/lib/auth-client";
 import { usePageTree } from "@/hooks/use-page-tree";
 import { api } from "@/lib/api";
+import { PresenceProvider, usePresence } from "@/components/presence/presence-provider";
+import type { PageTreeNode } from "@/hooks/use-page-tree";
 
 export interface Workspace {
   id: number;
@@ -36,7 +38,8 @@ function parseOrgMetadata(org: any): OrgMeta {
 export function Component() {
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
-  const { workspaceId } = useParams();
+  const params = useParams();
+  const workspaceId = params.workspaceId;
   const { data: activeOrg } = useActiveOrganization();
   const { data: orgs, refetch: refetchOrgs } = useListOrganizations();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -216,33 +219,79 @@ export function Component() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full">
-        <AppSidebar
+    <PresenceProvider orgId={activeOrg?.id} user={session?.user}>
+      <SidebarProvider>
+        <PresenceLocationTracker
+          workspacePublicId={workspaceId}
           pages={pages}
-          workspaceId={workspace?.id}
-          workspaceName={workspace?.name}
-          allWorkspaces={allWorkspaces}
-          orgs={orgs || []}
-          activeOrgId={activeOrg?.id}
-          activeOrgName={activeOrg?.name}
-          isPersonalOrg={isPersonalOrg}
-          onSwitchOrg={handleSwitchOrg}
-          onCreateOrg={handleCreateOrg}
-          onCreateSpace={handleCreateSpace}
-          onRenameSpace={handleRenameSpace}
-          onDeleteSpace={handleDeleteSpace}
-          onDeleteOrg={handleDeleteOrg}
-          onPageCreated={refresh}
         />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Header onSearchOpen={() => setSearchOpen(true)} />
-          <main className="flex-1 overflow-auto">
-            <Outlet context={{ workspace, refreshPages: refresh } satisfies WorkspaceOutletContext} />
-          </main>
+        <div className="flex h-screen w-full">
+          <AppSidebar
+            pages={pages}
+            workspaceId={workspace?.id}
+            workspaceName={workspace?.name}
+            allWorkspaces={allWorkspaces}
+            orgs={orgs || []}
+            activeOrgId={activeOrg?.id}
+            activeOrgName={activeOrg?.name}
+            isPersonalOrg={isPersonalOrg}
+            onSwitchOrg={handleSwitchOrg}
+            onCreateOrg={handleCreateOrg}
+            onCreateSpace={handleCreateSpace}
+            onRenameSpace={handleRenameSpace}
+            onDeleteSpace={handleDeleteSpace}
+            onDeleteOrg={handleDeleteOrg}
+            onPageCreated={refresh}
+          />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <Header onSearchOpen={() => setSearchOpen(true)} />
+            <main className="flex-1 overflow-auto">
+              <Outlet context={{ workspace, refreshPages: refresh } satisfies WorkspaceOutletContext} />
+            </main>
+          </div>
         </div>
-      </div>
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-    </SidebarProvider>
+        <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      </SidebarProvider>
+    </PresenceProvider>
   );
+}
+
+function findPageTitle(pages: PageTreeNode[], pagePublicId: string): string | undefined {
+  for (const page of pages) {
+    if (page.publicId === pagePublicId) return page.title;
+    const found = findPageTitle(page.children, pagePublicId);
+    if (found) return found;
+  }
+}
+
+function PresenceLocationTracker({
+  workspacePublicId,
+  pages,
+}: {
+  workspacePublicId?: string;
+  pages: PageTreeNode[];
+}) {
+  const { setLocation } = usePresence();
+  const location = useLocation();
+
+  // Extract pageId from URL: /w/:workspaceId/p/:pageId
+  const pageMatch = location.pathname.match(/\/w\/[^/]+\/p\/([^/]+)/);
+  const pageId = pageMatch?.[1];
+
+  useEffect(() => {
+    if (!workspacePublicId || workspacePublicId === "empty") {
+      setLocation(null);
+      return;
+    }
+
+    const pageTitle = pageId ? findPageTitle(pages, pageId) : undefined;
+
+    setLocation({
+      workspacePublicId,
+      pagePublicId: pageId,
+      pageTitle,
+    });
+  }, [workspacePublicId, pageId, pages, setLocation]);
+
+  return null;
 }

@@ -57,6 +57,8 @@ import { SidebarPageTree } from "./sidebar-page-tree";
 import type { PageTreeNode } from "@/hooks/use-page-tree";
 import { api } from "@/lib/api";
 import { InviteDialog } from "@/components/workspace/invite-dialog";
+import { usePresence } from "@/components/presence/presence-provider";
+import { PresenceAvatars } from "@/components/presence/presence-avatars";
 
 interface Workspace {
   id: number;
@@ -119,6 +121,7 @@ export function AppSidebar({
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
   const params = useParams();
+  const { onlineUsers, usersInWorkspace } = usePresence();
   const [dialog, setDialog] = useState<DialogState>({ type: "none" });
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -234,6 +237,16 @@ export function AppSidebar({
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Online Users */}
+        {onlineUsers.length > 0 && (
+          <div className="flex items-center gap-2 px-2">
+            <PresenceAvatars users={onlineUsers} max={5} size="sm" />
+            <span className="text-xs text-muted-foreground">
+              {onlineUsers.length} online
+            </span>
+          </div>
+        )}
+
         {/* Spaces List */}
         <div className="space-y-0.5">
           {allWorkspaces.map((ws) => (
@@ -249,6 +262,12 @@ export function AppSidebar({
                 >
                   <FolderOpen className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{ws.name}</span>
+                  {usersInWorkspace(ws.publicId).length > 0 && (
+                    <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      {usersInWorkspace(ws.publicId).length}
+                    </span>
+                  )}
                 </button>
               </ContextMenuTrigger>
               <ContextMenuContent>
