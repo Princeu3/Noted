@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
 import { BlockNoteView } from "@blocknote/shadcn";
-import { useCreateBlockNote } from "@blocknote/react";
+import {
+  useCreateBlockNote,
+  SuggestionMenuController,
+  getDefaultReactSlashMenuItems,
+} from "@blocknote/react";
+import {
+  filterSuggestionItems,
+  insertOrUpdateBlockForSlashMenu,
+} from "@blocknote/core/extensions";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
+import { FileText, Globe } from "lucide-react";
 import { useTheme } from "@/components/layout/theme-provider";
 import { schema } from "./editor-schema";
+import { uploadFile } from "./upload-file";
+import { EditorProvider } from "./editor-context";
 import "@blocknote/shadcn/style.css";
 
 interface EditorProps {
@@ -106,9 +117,11 @@ function EditorInner({
 }) {
   const { theme } = useTheme();
   const resolvedTheme = resolveTheme(theme);
+  const upload = (file: File) => uploadFile(file, String(pageId));
 
   const editor = useCreateBlockNote({
     schema,
+    uploadFile: upload,
     collaboration: {
       provider: provider as any,
       fragment: doc.getXmlFragment("document-store"),
@@ -119,12 +132,54 @@ function EditorInner({
     },
   });
 
+  const customSlashMenuItems = [
+    ...getDefaultReactSlashMenuItems(editor),
+    {
+      title: "PDF Document",
+      onItemClick: () =>
+        insertOrUpdateBlockForSlashMenu(editor, { type: "pdf" as const }),
+      aliases: ["pdf", "acrobat"],
+      group: "Media",
+      icon: <FileText className="h-[18px] w-[18px]" />,
+      subtext: "Upload and view a PDF inline",
+    },
+    {
+      title: "Word Document",
+      onItemClick: () =>
+        insertOrUpdateBlockForSlashMenu(editor, { type: "docx" as const }),
+      aliases: ["doc", "docx", "word"],
+      group: "Media",
+      icon: <FileText className="h-[18px] w-[18px]" />,
+      subtext: "Upload and view a Word document inline",
+    },
+    {
+      title: "Link Embed",
+      onItemClick: () =>
+        insertOrUpdateBlockForSlashMenu(editor, {
+          type: "linkEmbed" as const,
+        }),
+      aliases: ["link", "url", "embed", "bookmark"],
+      group: "Embeds",
+      icon: <Globe className="h-[18px] w-[18px]" />,
+      subtext: "Embed a link with OpenGraph preview",
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-4xl py-8 px-4">
       <div className="mb-2 text-xs text-muted-foreground">
         WS: {status} | doc: {pageId}
       </div>
-      <BlockNoteView editor={editor} theme={resolvedTheme} />
+      <EditorProvider pageId={pageId} upload={upload}>
+        <BlockNoteView editor={editor} theme={resolvedTheme} slashMenu={false}>
+          <SuggestionMenuController
+            triggerCharacter="/"
+            getItems={async (query) =>
+              filterSuggestionItems(customSlashMenuItems, query)
+            }
+          />
+        </BlockNoteView>
+      </EditorProvider>
     </div>
   );
 }
