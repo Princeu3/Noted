@@ -2,7 +2,7 @@ FROM oven/bun:1 AS build
 WORKDIR /app
 
 # Install dependencies
-COPY package.json bun.lock bunfig.toml ./
+COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/web/package.json apps/web/
 RUN bun install
