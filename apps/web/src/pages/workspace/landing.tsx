@@ -9,8 +9,6 @@ interface Workspace {
   name: string;
 }
 
-let globalSetupStarted = false;
-
 export function Component() {
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
@@ -24,8 +22,8 @@ export function Component() {
   }, [session, isPending, navigate]);
 
   useEffect(() => {
-    if (orgsPending || !orgs || !session || setupDone.current || globalSetupStarted) return;
-    globalSetupStarted = true;
+    if (orgsPending || !orgs || !session || setupDone.current) return;
+    setupDone.current = true;
 
     async function setup() {
       try {
@@ -42,7 +40,6 @@ export function Component() {
           // Has orgs but no spaces
           const firstOrg = orgs![0];
           await organization.setActive({ organizationId: firstOrg.id });
-          setupDone.current = true;
           navigate(`/w/empty`, { replace: true });
           return;
         }
@@ -58,7 +55,6 @@ export function Component() {
             navigate(`/w/${spaces[0].publicId}`, { replace: true });
             return;
           }
-          setupDone.current = true;
           navigate(`/w/empty`, { replace: true });
           return;
         }
@@ -72,10 +68,7 @@ export function Component() {
           metadata: { type: "personal" },
         });
 
-        if (error || !newOrg) {
-          setupDone.current = true;
-          return;
-        }
+        if (error || !newOrg) return;
 
         await organization.setActive({ organizationId: newOrg.id });
 
@@ -85,8 +78,8 @@ export function Component() {
         });
 
         navigate(`/w/${space.publicId}`, { replace: true });
-      } finally {
-        setupDone.current = true;
+      } catch (e) {
+        console.error("[Landing] Setup failed:", e);
       }
     }
 
