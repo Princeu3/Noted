@@ -45,7 +45,6 @@ import {
   Moon,
   Monitor,
   UserPlus,
-  Building2,
   Check,
   Trash2,
   Pencil,
@@ -59,6 +58,7 @@ import { api } from "@/lib/api";
 import { InviteDialog } from "@/components/workspace/invite-dialog";
 import { usePresence } from "@/components/presence/presence-provider";
 import { PresenceAvatars } from "@/components/presence/presence-avatars";
+import { AppLogo } from "@/components/ui/app-logo";
 
 interface Workspace {
   id: number;
@@ -190,7 +190,7 @@ export function AppSidebar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-full justify-start gap-2 px-2 h-8">
-              <Building2 className="h-4 w-4 shrink-0" />
+              <AppLogo size="sm" className="shrink-0" />
               <span className="truncate text-sm font-semibold">
                 {activeOrgName || "Organization"}
               </span>
