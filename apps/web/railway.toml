@@ -1,9 +1,9 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd ../.. && bun install && bun run --filter @noted/web build"
+buildCommand = "bun install && cd apps/web && bunx vite build"
 
 [deploy]
-startCommand = "npx serve dist -s -l 3000"
+startCommand = "cd apps/web && npx serve dist -s -l 3000"
 healthcheckPath = "/"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"

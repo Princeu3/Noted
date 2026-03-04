@@ -1,13 +1,10 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd ../.. && bun install"
+buildCommand = "bun install"
 
 [deploy]
-startCommand = "cd ../.. && bun run db:push && cd apps/api && bun run src/index.ts"
+startCommand = "cd packages/db && bunx drizzle-kit push && cd ../../apps/api && bun run src/index.ts"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-
-[deploy.volumes]
-"/app/uploads" = "noted-uploads"
