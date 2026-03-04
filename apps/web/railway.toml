@@ -1,9 +1,8 @@
 [build]
-builder = "nixpacks"
-buildCommand = "bun install && cd apps/web && bunx vite build"
+builder = "DOCKERFILE"
+dockerfilePath = "apps/web/Dockerfile"
 
 [deploy]
-startCommand = "cd apps/web && npx serve dist -s -l 3000"
 healthcheckPath = "/"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"

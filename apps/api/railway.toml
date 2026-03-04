@@ -1,9 +1,8 @@
 [build]
-builder = "nixpacks"
-buildCommand = "bun install"
+builder = "DOCKERFILE"
+dockerfilePath = "apps/api/Dockerfile"
 
 [deploy]
-startCommand = "cd packages/db && bunx drizzle-kit push && cd ../../apps/api && bun run src/index.ts"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
