@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router";
-import { organization, useSession, signOut } from "@/lib/auth-client";
+import { organization, useSession, useListOrganizations, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
@@ -17,6 +17,7 @@ export function Component() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: session } = useSession();
+  const { data: orgs } = useListOrganizations();
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "accepted">("loading");
   const [error, setError] = useState("");
   const [invitation, setInvitation] = useState<InvitationInfo | null>(null);
@@ -37,6 +38,37 @@ export function Component() {
     if (invitation && session) setStatus("ready");
   }, [session, invitation]);
 
+  async function ensurePersonalOrg() {
+    // Check if user already has a personal org
+    if (orgs && orgs.length > 0) {
+      const hasPersonal = orgs.some((org) => {
+        try {
+          const meta = (org as any).metadata ? JSON.parse((org as any).metadata) : {};
+          return meta.type === "personal";
+        } catch {
+          return false;
+        }
+      });
+      if (hasPersonal) return;
+    }
+
+    // Create personal org + space
+    const userName = session?.user.name || "My";
+    const slug = `personal-${Date.now()}`;
+    const { data: newOrg } = await organization.create({
+      name: `${userName}'s Notes`,
+      slug,
+      metadata: { type: "personal" },
+    });
+
+    if (newOrg) {
+      await api("/api/workspaces", {
+        method: "POST",
+        body: JSON.stringify({ name: "Personal", orgId: newOrg.id }),
+      });
+    }
+  }
+
   async function handleAccept() {
     if (!id) return;
     setStatus("loading");
@@ -49,27 +81,20 @@ export function Component() {
       return;
     }
 
-    // Set the invited org as active and create a personal workspace
+    // Ensure user has a personal org
+    await ensurePersonalOrg();
+
+    // Set the invited org as active and navigate to its first space
     if (invitation?.orgId) {
       await organization.setActive({ organizationId: invitation.orgId });
 
       try {
-        await api("/api/workspaces", {
-          method: "POST",
-          body: JSON.stringify({ name: "Personal", orgId: invitation.orgId, type: "personal" }),
-        });
-      } catch {
-        // Non-critical — they can still use the shared workspace
-      }
-
-      // Navigate to the invited org's workspace
-      try {
-        const workspaces = await api<{ publicId: string }[]>(
+        const spaces = await api<{ publicId: string }[]>(
           `/api/workspaces?orgId=${invitation.orgId}`
         );
-        if (workspaces.length > 0) {
+        if (spaces.length > 0) {
           setStatus("accepted");
-          setTimeout(() => navigate(`/w/${workspaces[0].publicId}`, { replace: true }), 1000);
+          setTimeout(() => navigate(`/w/${spaces[0].publicId}`, { replace: true }), 1000);
           return;
         }
       } catch {
@@ -90,11 +115,11 @@ export function Component() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Team Invitation</CardTitle>
+          <CardTitle>Invitation</CardTitle>
           <CardDescription>
             {invitation
               ? `You've been invited to join ${invitation.organizationName}`
-              : "You've been invited to join a team workspace"}
+              : "You've been invited to collaborate"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

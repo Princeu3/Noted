@@ -40,7 +40,7 @@ export function Component() {
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Create account</CardTitle>
-          <CardDescription>Get started with your team workspace</CardDescription>
+          <CardDescription>Get started with Noted</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

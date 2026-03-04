@@ -104,7 +104,7 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
         <DialogHeader>
           <DialogTitle>Invite Members</DialogTitle>
           <DialogDescription>
-            Invite people to collaborate on the shared workspace.
+            Invite people to collaborate in this organization.
           </DialogDescription>
         </DialogHeader>
 

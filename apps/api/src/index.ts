@@ -10,6 +10,7 @@ import { tagsRouter } from "./routes/tags";
 import { searchRouter } from "./routes/search";
 import { embedsRouter } from "./routes/embeds";
 import { tasksRouter } from "./routes/tasks";
+import { organizationsRouter } from "./routes/organizations";
 
 const app = new Hono();
 
@@ -72,6 +73,7 @@ app.route("/api", tagsRouter);
 app.route("/api", searchRouter);
 app.route("/api", embedsRouter);
 app.route("/api", tasksRouter);
+app.route("/api", organizationsRouter);
 
 // Start Hocuspocus on internal-only port
 hocuspocus.listen().then(() => {

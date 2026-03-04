@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useSession, useListOrganizations, organization } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { api } from "@/lib/api";
 
 interface Workspace {
@@ -16,78 +13,61 @@ export function Component() {
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
   const { data: orgs, isPending: orgsPending } = useListOrganizations();
-  const [orgName, setOrgName] = useState("");
-  const [creating, setCreating] = useState(false);
   const [checked, setChecked] = useState(false);
-  const [nameError, setNameError] = useState("");
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isPending && !session) {
       navigate("/sign-in");
     }
   }, [session, isPending, navigate]);
 
-  // Check for existing orgs and workspaces, auto-redirect
   useEffect(() => {
-    if (orgsPending || !orgs || checked) return;
+    if (orgsPending || !orgs || !session || checked) return;
 
-    async function checkExisting() {
+    async function setup() {
+      // If user has orgs, find first one with spaces and redirect
       if (orgs!.length > 0) {
-        const org = orgs![0];
-        // Set as active org
-        await organization.setActive({ organizationId: org.id });
-        // Check for workspaces in this org
-        const workspaces = await api<Workspace[]>(`/api/workspaces?orgId=${org.id}`);
-        if (workspaces.length > 0) {
-          navigate(`/w/${workspaces[0].publicId}`, { replace: true });
-          return;
+        for (const org of orgs!) {
+          await organization.setActive({ organizationId: org.id });
+          const spaces = await api<Workspace[]>(`/api/workspaces?orgId=${org.id}`);
+          if (spaces.length > 0) {
+            navigate(`/w/${spaces[0].publicId}`, { replace: true });
+            return;
+          }
         }
+        // Has orgs but no spaces — redirect to first org's context, will show empty state
+        const firstOrg = orgs![0];
+        await organization.setActive({ organizationId: firstOrg.id });
+        setChecked(true);
+        return;
       }
-      setChecked(true);
-    }
 
-    checkExisting();
-  }, [orgs, orgsPending, checked, navigate]);
+      // No orgs — auto-create personal org + personal space
+      const userName = session!.user.name || "My";
+      const slug = `personal-${Date.now()}`;
+      const { data: newOrg, error } = await organization.create({
+        name: `${userName}'s Notes`,
+        slug,
+        metadata: { type: "personal" },
+      });
 
-  const reservedNames = ["personal", "shared"];
+      if (error || !newOrg) {
+        setChecked(true);
+        return;
+      }
 
-  function handleNameChange(value: string) {
-    setOrgName(value);
-    if (reservedNames.includes(value.trim().toLowerCase())) {
-      setNameError(`"${value.trim()}" is reserved. Please choose a different name.`);
-    } else {
-      setNameError("");
-    }
-  }
+      await organization.setActive({ organizationId: newOrg.id });
 
-  async function handleCreateOrg() {
-    if (!orgName.trim() || nameError) return;
-    setCreating(true);
-
-    const slug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const { data, error } = await organization.create({ name: orgName, slug });
-
-    if (error || !data) {
-      setCreating(false);
-      return;
-    }
-
-    await organization.setActive({ organizationId: data.id });
-
-    const [personal] = await Promise.all([
-      api<{ publicId: string }>("/api/workspaces", {
+      const space = await api<{ publicId: string }>("/api/workspaces", {
         method: "POST",
-        body: JSON.stringify({ name: "Personal", orgId: data.id, type: "personal" }),
-      }),
-      api<{ publicId: string }>("/api/workspaces", {
-        method: "POST",
-        body: JSON.stringify({ name: "Shared", orgId: data.id, type: "shared" }),
-      }),
-    ]);
+        body: JSON.stringify({ name: "Personal", orgId: newOrg.id }),
+      });
 
-    navigate(`/w/${personal.publicId}`);
-  }
+      navigate(`/w/${space.publicId}`, { replace: true });
+    }
+
+    setup();
+  }, [orgs, orgsPending, session, checked, navigate]);
 
   if (isPending || orgsPending || !checked) {
     return (
@@ -97,26 +77,10 @@ export function Component() {
     );
   }
 
+  // User has orgs but no spaces — show empty state (will be handled by layout)
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome to Noted</CardTitle>
-          <CardDescription>Create your team workspace to get started</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            placeholder="Team name (e.g. Acme Corp)"
-            value={orgName}
-            onChange={(e) => handleNameChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreateOrg()}
-          />
-          {nameError && <p className="text-sm text-destructive">{nameError}</p>}
-          <Button onClick={handleCreateOrg} className="w-full" disabled={creating || !orgName.trim() || !!nameError}>
-            {creating ? "Creating..." : "Create Workspace"}
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="flex h-screen items-center justify-center">
+      <div className="text-muted-foreground">Loading...</div>
     </div>
   );
 }
