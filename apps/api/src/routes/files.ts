@@ -30,10 +30,11 @@ filesRouter.get("/files/serve/:publicId", async (c) => {
     return c.json({ error: "File not found on disk" }, 404);
   }
 
+  const encodedName = encodeURIComponent(file.name);
   return new Response(bunFile.stream(), {
     headers: {
       "Content-Type": file.mimeType,
-      "Content-Disposition": `inline; filename="${file.name}"`,
+      "Content-Disposition": `inline; filename*=UTF-8''${encodedName}`,
       "Content-Length": String(file.sizeBytes),
       "Cache-Control": "public, max-age=31536000, immutable",
     },
