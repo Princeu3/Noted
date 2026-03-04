@@ -1,0 +1,26 @@
+{
+  "name": "@noted/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "push": "drizzle-kit push",
+    "studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45",
+    "postgres": "^3.4",
+    "drizzle-zod": "^0.7",
+    "zod": "^3.24",
+    "@noted/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30"
+  }
+}

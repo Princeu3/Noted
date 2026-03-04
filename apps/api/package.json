@@ -1,0 +1,19 @@
+{
+  "name": "@noted/api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --env-file=../../.env --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@hocuspocus/server": "^3.4",
+    "@noted/db": "workspace:*",
+    "@noted/shared": "workspace:*",
+    "better-auth": "^1.2",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.7",
+    "yjs": "^13.6"
+  }
+}

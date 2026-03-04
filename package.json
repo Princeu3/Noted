@@ -1,0 +1,17 @@
+{
+  "name": "noted",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "dev:api": "bun run --filter @noted/api dev",
+    "dev:web": "bun run --filter @noted/web dev",
+    "db:generate": "bun run --filter @noted/db generate",
+    "db:migrate": "bun run --filter @noted/db migrate",
+    "db:push": "bun run --filter @noted/db push",
+    "db:studio": "bun run --filter @noted/db studio",
+    "build": "bun run --filter '*' build"
+  },
+  "devDependencies": {
+  }
+}
