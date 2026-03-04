@@ -11,6 +11,36 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
 export const filesRouter = new Hono();
 
+// Serve file (public — protected by unguessable publicId, like S3 signed URLs)
+filesRouter.get("/files/serve/:publicId", async (c) => {
+  const publicId = c.req.param("publicId");
+
+  const [file] = await db
+    .select()
+    .from(files)
+    .where(eq(files.publicId, publicId));
+
+  if (!file) {
+    return c.json({ error: "File not found" }, 404);
+  }
+
+  const bunFile = Bun.file(file.storagePath);
+  const exists = await bunFile.exists();
+  if (!exists) {
+    return c.json({ error: "File not found on disk" }, 404);
+  }
+
+  return new Response(bunFile.stream(), {
+    headers: {
+      "Content-Type": file.mimeType,
+      "Content-Disposition": `inline; filename="${file.name}"`,
+      "Content-Length": String(file.sizeBytes),
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
+});
+
+// All routes below require auth
 filesRouter.use("*", authMiddleware);
 
 // Upload file
@@ -50,34 +80,6 @@ filesRouter.post("/files/upload", async (c) => {
     .returning();
 
   return c.json(record, 201);
-});
-
-// Serve file
-filesRouter.get("/files/serve/:publicId", async (c) => {
-  const publicId = c.req.param("publicId");
-
-  const [file] = await db
-    .select()
-    .from(files)
-    .where(eq(files.publicId, publicId));
-
-  if (!file) {
-    return c.json({ error: "File not found" }, 404);
-  }
-
-  const bunFile = Bun.file(file.storagePath);
-  const exists = await bunFile.exists();
-  if (!exists) {
-    return c.json({ error: "File not found on disk" }, 404);
-  }
-
-  return new Response(bunFile.stream(), {
-    headers: {
-      "Content-Type": file.mimeType,
-      "Content-Disposition": `inline; filename="${file.name}"`,
-      "Content-Length": String(file.sizeBytes),
-    },
-  });
 });
 
 // Get file metadata

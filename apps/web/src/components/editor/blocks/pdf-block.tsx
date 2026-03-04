@@ -108,9 +108,8 @@ export const createPdfBlock = createReactBlockSpec(
           </div>
           <div className="overflow-auto max-h-[600px] flex justify-center bg-muted/20">
             <Document
-              file={{ url: block.props.url, withCredentials: true }}
+              file={block.props.url}
               onLoadSuccess={({ numPages: n }) => setNumPages(n)}
-              onLoadError={(err) => console.error("[PDF] Load error:", err)}
             >
               <Page pageNumber={pageNumber} scale={scale} />
             </Document>

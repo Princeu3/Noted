@@ -23,7 +23,7 @@ export const createDocxBlock = createReactBlockSpec(
       useEffect(() => {
         if (!block.props.url || !containerRef.current) return;
         setLoading(true);
-        fetch(block.props.url, { credentials: "include" })
+        fetch(block.props.url)
           .then((res) => res.arrayBuffer())
           .then((buffer) => renderAsync(buffer, containerRef.current!))
           .catch(() => {})
