@@ -47,13 +47,17 @@ export function Component() {
       .catch(() => setWorkspaceError(true));
   }, [workspaceId]);
 
-  // Load all workspaces for the org
+  // Load all workspaces for the org (redirect if no longer a member)
   useEffect(() => {
     if (!activeOrg?.id) return;
     api<Workspace[]>(`/api/workspaces?orgId=${activeOrg.id}`)
       .then(setAllWorkspaces)
-      .catch(() => {});
-  }, [activeOrg?.id]);
+      .catch((err) => {
+        if (err.status === 403) {
+          navigate("/", { replace: true });
+        }
+      });
+  }, [activeOrg?.id, navigate]);
 
   // Cmd+K shortcut
   useEffect(() => {

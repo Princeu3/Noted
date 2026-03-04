@@ -15,7 +15,9 @@ export async function api<T>(
 
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || res.statusText);
+    const err = new Error(error || res.statusText);
+    (err as any).status = res.status;
+    throw err;
   }
 
   return res.json();
