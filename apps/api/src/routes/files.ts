@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { db } from "@noted/db";
 import { files } from "@noted/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,10 +10,8 @@ import { mkdir } from "fs/promises";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
-// Public router — no auth
-const publicFiles = new Hono();
-
-publicFiles.get("/files/serve/:publicId", async (c) => {
+// Public handler — registered directly on the main app in index.ts
+export async function serveFile(c: Context) {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
@@ -39,13 +38,13 @@ publicFiles.get("/files/serve/:publicId", async (c) => {
       "Cache-Control": "public, max-age=31536000, immutable",
     },
   });
-});
+}
 
-// Protected router — auth required
-const protectedFiles = new Hono();
-protectedFiles.use("*", authMiddleware);
+// Protected router — all routes require auth
+export const filesRouter = new Hono();
+filesRouter.use("*", authMiddleware);
 
-protectedFiles.post("/files/upload", async (c) => {
+filesRouter.post("/files/upload", async (c) => {
   const user = c.get("user");
   const formData = await c.req.formData();
   const file = formData.get("file") as File | null;
@@ -83,7 +82,7 @@ protectedFiles.post("/files/upload", async (c) => {
   return c.json(record, 201);
 });
 
-protectedFiles.get("/files/:publicId", async (c) => {
+filesRouter.get("/files/:publicId", async (c) => {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
@@ -98,7 +97,7 @@ protectedFiles.get("/files/:publicId", async (c) => {
   return c.json(file);
 });
 
-protectedFiles.delete("/files/:publicId", async (c) => {
+filesRouter.delete("/files/:publicId", async (c) => {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
@@ -121,8 +120,3 @@ protectedFiles.delete("/files/:publicId", async (c) => {
 
   return c.json({ success: true });
 });
-
-// Merge into single exported router
-export const filesRouter = new Hono();
-filesRouter.route("/", publicFiles);
-filesRouter.route("/", protectedFiles);

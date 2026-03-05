@@ -11,6 +11,7 @@ import { searchRouter } from "./routes/search";
 import { embedsRouter } from "./routes/embeds";
 import { tasksRouter } from "./routes/tasks";
 import { organizationsRouter } from "./routes/organizations";
+import { serveFile } from "./routes/files";
 
 const app = new Hono();
 
@@ -30,6 +31,9 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 // Health check
 app.get("/api/health", (c) => c.json({ status: "ok" }));
+
+// Public file serving (no auth — protected by unguessable publicId)
+app.get("/api/files/serve/:publicId", serveFile);
 
 // Invitation lookup (public, no auth required)
 app.get("/api/invitations/:id", async (c) => {
