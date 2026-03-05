@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router";
-import { organization, useSession, useListOrganizations, signOut } from "@/lib/auth-client";
+import { organization, useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
@@ -18,7 +18,6 @@ export function Component() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: session } = useSession();
-  const { data: orgs } = useListOrganizations();
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "accepted">("loading");
   const [error, setError] = useState("");
   const [invitation, setInvitation] = useState<InvitationInfo | null>(null);
@@ -40,12 +39,14 @@ export function Component() {
   }, [session, invitation]);
 
   async function ensurePersonalOrg() {
-    // Check if user already has a personal org
-    if (orgs && orgs.length > 0) {
-      const hasPersonal = orgs.some((org) => {
+    // Fetch fresh org list — the hook value may be stale/unloaded
+    const { data: freshOrgs } = await organization.list();
+    if (freshOrgs && freshOrgs.length > 0) {
+      const hasPersonal = freshOrgs.some((org) => {
         try {
-          const meta = (org as any).metadata ? JSON.parse((org as any).metadata) : {};
-          return meta.type === "personal";
+          const raw = (org as any).metadata;
+          const meta = typeof raw === "string" ? JSON.parse(raw) : raw;
+          return meta?.type === "personal";
         } catch {
           return false;
         }
