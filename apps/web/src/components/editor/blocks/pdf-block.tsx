@@ -84,9 +84,9 @@ export const createPdfBlock = createReactBlockSpec(
                   e.stopPropagation();
                   window.open(block.props.url, "_blank");
                 }}
-                className="p-1 rounded-sm hover:bg-accent text-muted-foreground"
+                className="p-0.5 rounded-sm hover:bg-accent text-muted-foreground"
               >
-                <Download className="h-3 w-3" />
+                <Download className="h-2.5 w-2.5" />
               </span>
               <ChevronUp
                 className={`h-3 w-3 text-muted-foreground transition-transform ${expanded ? "" : "rotate-180"}`}
