@@ -9,10 +9,10 @@ import { mkdir } from "fs/promises";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
-export const filesRouter = new Hono();
+// Public router — no auth
+const publicFiles = new Hono();
 
-// Serve file (public — protected by unguessable publicId, like S3 signed URLs)
-filesRouter.get("/files/serve/:publicId", async (c) => {
+publicFiles.get("/files/serve/:publicId", async (c) => {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
@@ -41,8 +41,11 @@ filesRouter.get("/files/serve/:publicId", async (c) => {
   });
 });
 
-// Upload file (auth required)
-filesRouter.post("/files/upload", authMiddleware, async (c) => {
+// Protected router — auth required
+const protectedFiles = new Hono();
+protectedFiles.use("*", authMiddleware);
+
+protectedFiles.post("/files/upload", async (c) => {
   const user = c.get("user");
   const formData = await c.req.formData();
   const file = formData.get("file") as File | null;
@@ -80,8 +83,7 @@ filesRouter.post("/files/upload", authMiddleware, async (c) => {
   return c.json(record, 201);
 });
 
-// Get file metadata (auth required)
-filesRouter.get("/files/:publicId", authMiddleware, async (c) => {
+protectedFiles.get("/files/:publicId", async (c) => {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
@@ -96,8 +98,7 @@ filesRouter.get("/files/:publicId", authMiddleware, async (c) => {
   return c.json(file);
 });
 
-// Delete file (auth required)
-filesRouter.delete("/files/:publicId", authMiddleware, async (c) => {
+protectedFiles.delete("/files/:publicId", async (c) => {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
@@ -109,7 +110,6 @@ filesRouter.delete("/files/:publicId", authMiddleware, async (c) => {
     return c.json({ error: "File not found" }, 404);
   }
 
-  // Delete from disk
   try {
     const { unlink } = await import("fs/promises");
     await unlink(file.storagePath);
@@ -121,3 +121,8 @@ filesRouter.delete("/files/:publicId", authMiddleware, async (c) => {
 
   return c.json({ success: true });
 });
+
+// Merge into single exported router
+export const filesRouter = new Hono();
+filesRouter.route("/", publicFiles);
+filesRouter.route("/", protectedFiles);
