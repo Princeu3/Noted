@@ -2,7 +2,7 @@ import { createReactBlockSpec } from "@blocknote/react";
 import { useState, useRef, useEffect } from "react";
 import { renderAsync } from "docx-preview";
 import { useEditorContext } from "../editor-context";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, ChevronUp } from "lucide-react";
 
 export const createDocxBlock = createReactBlockSpec(
   {
@@ -18,19 +18,21 @@ export const createDocxBlock = createReactBlockSpec(
       const { upload } = useEditorContext();
       const [uploading, setUploading] = useState(false);
       const [loading, setLoading] = useState(false);
+      const [expanded, setExpanded] = useState(false);
       const containerRef = useRef<HTMLDivElement>(null);
+      const fileInputRef = useRef<HTMLInputElement>(null);
+      const renderedRef = useRef(false);
 
       useEffect(() => {
-        if (!block.props.url || !containerRef.current) return;
+        if (!block.props.url || !containerRef.current || renderedRef.current) return;
         setLoading(true);
+        renderedRef.current = true;
         fetch(block.props.url)
           .then((res) => res.arrayBuffer())
           .then((buffer) => renderAsync(buffer, containerRef.current!))
           .catch(() => {})
           .finally(() => setLoading(false));
-      }, [block.props.url]);
-
-      const fileInputRef = useRef<HTMLInputElement>(null);
+      }, [block.props.url, expanded]);
 
       if (!block.props.url) {
         return (
@@ -66,26 +68,57 @@ export const createDocxBlock = createReactBlockSpec(
       }
 
       return (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 text-xs text-muted-foreground">
-            <span className="truncate">{block.props.name || "Document"}</span>
-            <a
-              href={block.props.url}
-              download={block.props.name}
-              className="p-1 hover:bg-accent rounded"
-            >
-              <Download className="h-3.5 w-3.5" />
-            </a>
-          </div>
-          {loading && (
-            <div className="p-4">
-              <div className="animate-pulse h-4 w-48 rounded bg-muted" />
-            </div>
-          )}
+        <div className="rounded-md border border-border overflow-hidden -mx-1">
           <div
-            ref={containerRef}
-            className="overflow-y-auto max-h-[500px] p-4"
-          />
+            role="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="flex items-center gap-2 w-full px-2 py-1 text-xs cursor-pointer select-none hover:bg-muted/50 transition-colors"
+          >
+            <FileText className="h-3.5 w-3.5 text-blue-500/80 shrink-0" />
+            <span className="truncate text-sm text-foreground">
+              {block.props.name || "Document"}
+            </span>
+            <span className="ml-auto flex items-center gap-0.5">
+              <span
+                role="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const res = await fetch(block.props.url);
+                    if (!res.ok) throw new Error();
+                    const blob = await res.blob();
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = block.props.name || "document.docx";
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                  } catch {
+                    alert("File not available. It may need to be re-uploaded.");
+                  }
+                }}
+                className="p-0.5 rounded-sm hover:bg-accent text-muted-foreground"
+              >
+                <Download className="h-2.5 w-2.5" />
+              </span>
+              <ChevronUp
+                className={`h-3 w-3 text-muted-foreground transition-transform ${expanded ? "" : "rotate-180"}`}
+              />
+            </span>
+          </div>
+
+          {expanded && (
+            <>
+              {loading && (
+                <div className="border-t border-border p-4">
+                  <div className="animate-pulse h-4 w-48 rounded bg-muted" />
+                </div>
+              )}
+              <div
+                ref={containerRef}
+                className="overflow-y-auto max-h-[500px] border-t border-border"
+              />
+            </>
+          )}
         </div>
       );
     },
