@@ -11,8 +11,14 @@ import {
 } from "@blocknote/core/extensions";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
-import { FileText, Globe } from "lucide-react";
+import { FileText, Globe, Wifi, WifiOff, Loader2, ShieldAlert } from "lucide-react";
 import { useTheme } from "@/components/layout/theme-provider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { schema } from "./editor-schema";
 import { uploadFile } from "./upload-file";
 import { EditorProvider } from "./editor-context";
@@ -31,12 +37,55 @@ function resolveTheme(theme: string): "light" | "dark" {
   return theme as "light" | "dark";
 }
 
+type ConnectionStatus = "connecting" | "connected" | "disconnected" | "auth-failed";
+
+function StatusIndicator({ status }: { status: ConnectionStatus }) {
+  const config = {
+    connecting: {
+      icon: <Loader2 className="h-3 w-3 animate-spin" />,
+      color: "bg-yellow-500",
+      label: "Connecting...",
+    },
+    connected: {
+      icon: <Wifi className="h-3 w-3" />,
+      color: "bg-emerald-500",
+      label: "Synced",
+    },
+    disconnected: {
+      icon: <WifiOff className="h-3 w-3" />,
+      color: "bg-red-500",
+      label: "Disconnected — changes saved locally",
+    },
+    "auth-failed": {
+      icon: <ShieldAlert className="h-3 w-3" />,
+      color: "bg-red-500",
+      label: "Authentication failed",
+    },
+  }[status];
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-background/80 backdrop-blur-sm px-3 py-1.5 shadow-sm cursor-default select-none transition-all hover:shadow-md">
+            <span className={`h-2 w-2 rounded-full ${config.color}`} />
+            <span className="text-xs text-muted-foreground">{config.icon}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="left" sideOffset={8}>
+          {config.label}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 /**
  * Wrapper that manages provider lifecycle in a StrictMode-safe way.
  * useEffect (not useMemo) ensures cleanup + recreation on StrictMode re-mount.
  */
 export function Editor({ pageId, userName, userColor = "#6366f1" }: EditorProps) {
-  const [status, setStatus] = useState("connecting...");
+  const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [connection, setConnection] = useState<{
     provider: HocuspocusProvider;
     doc: Y.Doc;
@@ -49,10 +98,8 @@ export function Editor({ pageId, userName, userColor = "#6366f1" }: EditorProps)
     if (import.meta.env.VITE_HOCUSPOCUS_URL) {
       wsUrl = import.meta.env.VITE_HOCUSPOCUS_URL;
     } else if (apiUrl) {
-      // Production: connect to API domain's /collaboration endpoint
       wsUrl = apiUrl.replace(/^http/, "ws") + "/collaboration";
     } else {
-      // Dev: proxy through Vite
       const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       wsUrl = `${wsProtocol}//${window.location.host}/collaboration`;
     }
@@ -64,7 +111,7 @@ export function Editor({ pageId, userName, userColor = "#6366f1" }: EditorProps)
       token: "cookie-auth",
       onConnect: () => setStatus("connected"),
       onDisconnect: () => setStatus("disconnected"),
-      onAuthenticationFailed: ({ reason }) => setStatus(`auth failed: ${reason}`),
+      onAuthenticationFailed: () => setStatus("auth-failed"),
       onSynced: () => console.log("[Editor] Synced with server"),
     });
 
@@ -110,7 +157,7 @@ function EditorInner({
 }: {
   provider: HocuspocusProvider;
   doc: Y.Doc;
-  status: string;
+  status: ConnectionStatus;
   pageId: number;
   userName: string;
   userColor: string;
@@ -167,9 +214,6 @@ function EditorInner({
 
   return (
     <div className="mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-2 text-xs text-muted-foreground">
-        WS: {status} | doc: {pageId}
-      </div>
       <EditorProvider pageId={pageId} upload={upload}>
         <BlockNoteView editor={editor} theme={resolvedTheme} slashMenu={false}>
           <SuggestionMenuController
@@ -180,6 +224,7 @@ function EditorInner({
           />
         </BlockNoteView>
       </EditorProvider>
+      <StatusIndicator status={status} />
     </div>
   );
 }
