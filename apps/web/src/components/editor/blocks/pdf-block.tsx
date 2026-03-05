@@ -37,7 +37,7 @@ export const createPdfBlock = createReactBlockSpec(
 
       if (!block.props.url) {
         return (
-          <label className="flex items-center gap-2 rounded border border-dashed border-border px-3 py-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors">
+          <label className="flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors">
             <FileText className="h-4 w-4 shrink-0" />
             {uploading ? "Uploading..." : "Upload PDF"}
             <input
@@ -64,60 +64,59 @@ export const createPdfBlock = createReactBlockSpec(
       }
 
       return (
-        <div className="rounded border border-border overflow-hidden">
-          {/* Header — always visible */}
-          <button
+        <div className="rounded-md border border-border overflow-hidden -mx-1">
+          <div
+            role="button"
             onClick={() => setExpanded((v) => !v)}
-            className="flex items-center gap-2 w-full px-2.5 py-1.5 text-left text-xs hover:bg-accent/50 transition-colors"
+            className="flex items-center gap-2 w-full px-2 py-1 text-xs cursor-pointer select-none hover:bg-muted/50 transition-colors"
           >
-            <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" />
-            <span className="truncate text-foreground/80">
+            <FileText className="h-3.5 w-3.5 text-red-500/80 shrink-0" />
+            <span className="truncate text-sm text-foreground">
               {block.props.name || "PDF"}
             </span>
-            <span className="text-muted-foreground">
-              {numPages > 0 && `${numPages}p`}
-            </span>
-            <div className="ml-auto flex items-center gap-1">
-              <a
-                href={block.props.url}
-                download={block.props.name}
-                onClick={(e) => e.stopPropagation()}
-                className="p-0.5 rounded hover:bg-accent text-muted-foreground"
+            {numPages > 0 && (
+              <span className="text-muted-foreground">{numPages}p</span>
+            )}
+            <span className="ml-auto flex items-center gap-0.5">
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(block.props.url, "_blank");
+                }}
+                className="p-1 rounded-sm hover:bg-accent text-muted-foreground"
               >
                 <Download className="h-3 w-3" />
-              </a>
+              </span>
               <ChevronUp
-                className={`h-3 w-3 text-muted-foreground transition-transform ${
-                  expanded ? "" : "rotate-180"
-                }`}
+                className={`h-3 w-3 text-muted-foreground transition-transform ${expanded ? "" : "rotate-180"}`}
               />
-            </div>
-          </button>
+            </span>
+          </div>
 
-          {/* Viewer — collapsible */}
           {expanded && (
             <>
-              <div className="flex items-center justify-center gap-1 border-t border-border px-2 py-1 text-xs text-muted-foreground bg-muted/30">
+              <div className="flex items-center justify-center gap-1 border-t border-border px-2 py-0.5 text-[11px] text-muted-foreground bg-muted/30">
                 <button
                   onClick={() => setScale((s) => Math.max(0.5, s - 0.25))}
-                  className="p-0.5 hover:bg-accent rounded"
+                  className="p-0.5 hover:bg-accent rounded-sm"
                 >
                   <ZoomOut className="h-3 w-3" />
                 </button>
-                <span className="tabular-nums w-8 text-center">
+                <span className="tabular-nums w-7 text-center">
                   {Math.round(scale * 100)}%
                 </span>
                 <button
                   onClick={() => setScale((s) => Math.min(3, s + 0.25))}
-                  className="p-0.5 hover:bg-accent rounded"
+                  className="p-0.5 hover:bg-accent rounded-sm"
                 >
                   <ZoomIn className="h-3 w-3" />
                 </button>
-                <span className="mx-1 text-border">·</span>
+                <span className="text-border">·</span>
                 <button
                   onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
                   disabled={pageNumber <= 1}
-                  className="p-0.5 hover:bg-accent rounded disabled:opacity-30"
+                  className="p-0.5 hover:bg-accent rounded-sm disabled:opacity-30"
                 >
                   <ChevronLeft className="h-3 w-3" />
                 </button>
@@ -129,12 +128,12 @@ export const createPdfBlock = createReactBlockSpec(
                     setPageNumber((p) => Math.min(numPages, p + 1))
                   }
                   disabled={pageNumber >= numPages}
-                  className="p-0.5 hover:bg-accent rounded disabled:opacity-30"
+                  className="p-0.5 hover:bg-accent rounded-sm disabled:opacity-30"
                 >
                   <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
-              <div className="overflow-auto max-h-[500px] flex justify-center bg-muted/10">
+              <div className="overflow-auto max-h-[500px] flex justify-center">
                 <Document
                   file={block.props.url}
                   onLoadSuccess={({ numPages: n }) => setNumPages(n)}
@@ -145,7 +144,6 @@ export const createPdfBlock = createReactBlockSpec(
             </>
           )}
 
-          {/* Hidden loader for page count when collapsed */}
           {!expanded && numPages === 0 && (
             <div className="hidden">
               <Document
