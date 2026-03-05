@@ -1,7 +1,7 @@
 import { createReactBlockSpec } from "@blocknote/react";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { useEditorContext } from "../editor-context";
-import { ImageIcon, Trash2 } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 
 export const createImageBlock = createReactBlockSpec(
   {
@@ -25,9 +25,7 @@ export const createImageBlock = createReactBlockSpec(
       const { upload } = useEditorContext();
       const [uploading, setUploading] = useState(false);
       const [dragOver, setDragOver] = useState(false);
-      const imgRef = useRef<HTMLImageElement>(null);
       const fileInputRef = useRef<HTMLInputElement>(null);
-      const [hovered, setHovered] = useState(false);
 
       const handleFile = async (file: File) => {
         if (!file.type.startsWith("image/")) return;
@@ -82,13 +80,8 @@ export const createImageBlock = createReactBlockSpec(
       }
 
       return (
-        <div
-          className="relative group -mx-1"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        >
+        <div className="-mx-1">
           <img
-            ref={imgRef}
             src={block.props.url}
             alt={block.props.name || ""}
             className="rounded-md max-w-full h-auto"
@@ -99,20 +92,6 @@ export const createImageBlock = createReactBlockSpec(
             }}
             draggable={false}
           />
-          {hovered && (
-            <div className="absolute top-2 right-2 flex gap-1">
-              <button
-                onClick={() => {
-                  editor.updateBlock(block, {
-                    props: { url: "", name: "" },
-                  });
-                }}
-                className="p-1.5 rounded-md bg-background/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-destructive transition-colors shadow-sm"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
           {block.props.caption && (
             <p className="text-xs text-muted-foreground mt-1 text-center">
               {block.props.caption}
