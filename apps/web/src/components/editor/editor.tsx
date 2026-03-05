@@ -11,7 +11,7 @@ import {
 } from "@blocknote/core/extensions";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
-import { FileText, Globe, Wifi, WifiOff, Loader2, ShieldAlert } from "lucide-react";
+import { FileText, Globe, ImageIcon, Wifi, WifiOff, Loader2, ShieldAlert } from "lucide-react";
 import { useTheme } from "@/components/layout/theme-provider";
 import {
   Tooltip,
@@ -179,8 +179,21 @@ function EditorInner({
     },
   });
 
+  const defaultItems = getDefaultReactSlashMenuItems(editor).filter(
+    (item) => item.title !== "Image" && item.title !== "Video" && item.title !== "File" && item.title !== "Audio",
+  );
+
   const customSlashMenuItems = [
-    ...getDefaultReactSlashMenuItems(editor),
+    ...defaultItems,
+    {
+      title: "Image",
+      onItemClick: () =>
+        insertOrUpdateBlockForSlashMenu(editor, { type: "image" as const }),
+      aliases: ["image", "img", "picture", "photo"],
+      group: "Media",
+      icon: <ImageIcon className="h-[18px] w-[18px]" />,
+      subtext: "Upload an image",
+    },
     {
       title: "PDF Document",
       onItemClick: () =>
