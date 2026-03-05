@@ -41,11 +41,8 @@ filesRouter.get("/files/serve/:publicId", async (c) => {
   });
 });
 
-// All routes below require auth
-filesRouter.use("*", authMiddleware);
-
-// Upload file
-filesRouter.post("/files/upload", async (c) => {
+// Upload file (auth required)
+filesRouter.post("/files/upload", authMiddleware, async (c) => {
   const user = c.get("user");
   const formData = await c.req.formData();
   const file = formData.get("file") as File | null;
@@ -83,8 +80,8 @@ filesRouter.post("/files/upload", async (c) => {
   return c.json(record, 201);
 });
 
-// Get file metadata
-filesRouter.get("/files/:publicId", async (c) => {
+// Get file metadata (auth required)
+filesRouter.get("/files/:publicId", authMiddleware, async (c) => {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
@@ -99,8 +96,8 @@ filesRouter.get("/files/:publicId", async (c) => {
   return c.json(file);
 });
 
-// Delete file
-filesRouter.delete("/files/:publicId", async (c) => {
+// Delete file (auth required)
+filesRouter.delete("/files/:publicId", authMiddleware, async (c) => {
   const publicId = c.req.param("publicId");
 
   const [file] = await db
