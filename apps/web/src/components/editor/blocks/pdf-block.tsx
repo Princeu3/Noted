@@ -80,9 +80,20 @@ export const createPdfBlock = createReactBlockSpec(
             <span className="ml-auto flex items-center gap-0.5">
               <span
                 role="button"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  window.open(block.props.url, "_blank");
+                  try {
+                    const res = await fetch(block.props.url);
+                    if (!res.ok) throw new Error();
+                    const blob = await res.blob();
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = block.props.name || "document.pdf";
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                  } catch {
+                    alert("File not available. It may need to be re-uploaded.");
+                  }
                 }}
                 className="p-0.5 rounded-sm hover:bg-accent text-muted-foreground"
               >
