@@ -26,6 +26,7 @@ export const createImageBlock = createReactBlockSpec(
       const [uploading, setUploading] = useState(false);
       const [dragOver, setDragOver] = useState(false);
       const imgRef = useRef<HTMLImageElement>(null);
+      const fileInputRef = useRef<HTMLInputElement>(null);
       const [hovered, setHovered] = useState(false);
 
       const handleFile = async (file: File) => {
@@ -43,7 +44,9 @@ export const createImageBlock = createReactBlockSpec(
 
       if (!block.props.url) {
         return (
-          <label
+          <div
+            role="button"
+            onClick={() => fileInputRef.current?.click()}
             className={`flex items-center gap-2 rounded-md border border-dashed px-3 py-2 cursor-pointer text-sm transition-colors ${
               dragOver
                 ? "border-foreground/30 bg-muted/50 text-foreground"
@@ -64,6 +67,7 @@ export const createImageBlock = createReactBlockSpec(
             <ImageIcon className="h-4 w-4 shrink-0" />
             {uploading ? "Uploading..." : "Add image"}
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               className="hidden"
@@ -73,7 +77,7 @@ export const createImageBlock = createReactBlockSpec(
                 if (file) handleFile(file);
               }}
             />
-          </label>
+          </div>
         );
       }
 

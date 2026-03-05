@@ -1,5 +1,5 @@
 import { createReactBlockSpec } from "@blocknote/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { useEditorContext } from "../editor-context";
 import {
@@ -34,13 +34,19 @@ export const createPdfBlock = createReactBlockSpec(
       const [scale, setScale] = useState(1.0);
       const [uploading, setUploading] = useState(false);
       const [expanded, setExpanded] = useState(false);
+      const fileInputRef = useRef<HTMLInputElement>(null);
 
       if (!block.props.url) {
         return (
-          <label className="flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors">
+          <div
+            role="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+          >
             <FileText className="h-4 w-4 shrink-0" />
             {uploading ? "Uploading..." : "Upload PDF"}
             <input
+              ref={fileInputRef}
               type="file"
               accept=".pdf"
               className="hidden"
@@ -59,7 +65,7 @@ export const createPdfBlock = createReactBlockSpec(
                 }
               }}
             />
-          </label>
+          </div>
         );
       }
 

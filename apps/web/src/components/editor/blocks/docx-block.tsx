@@ -30,32 +30,37 @@ export const createDocxBlock = createReactBlockSpec(
           .finally(() => setLoading(false));
       }, [block.props.url]);
 
+      const fileInputRef = useRef<HTMLInputElement>(null);
+
       if (!block.props.url) {
         return (
-          <div className="rounded-lg border border-dashed border-border p-6 text-center">
-            <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-            <label className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-              {uploading ? "Uploading..." : "Click to upload a Word document"}
-              <input
-                type="file"
-                accept=".docx,.doc"
-                className="hidden"
-                disabled={uploading}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setUploading(true);
-                  try {
-                    const url = await upload(file);
-                    editor.updateBlock(block, {
-                      props: { url, name: file.name },
-                    });
-                  } finally {
-                    setUploading(false);
-                  }
-                }}
-              />
-            </label>
+          <div
+            role="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+          >
+            <FileText className="h-4 w-4 shrink-0" />
+            {uploading ? "Uploading..." : "Upload Word document"}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".docx,.doc"
+              className="hidden"
+              disabled={uploading}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                try {
+                  const url = await upload(file);
+                  editor.updateBlock(block, {
+                    props: { url, name: file.name },
+                  });
+                } finally {
+                  setUploading(false);
+                }
+              }}
+            />
           </div>
         );
       }
