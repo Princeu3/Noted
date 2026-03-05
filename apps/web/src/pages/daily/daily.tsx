@@ -7,13 +7,28 @@ import { ChevronLeft, ChevronRight, Calendar, Plus, Trash2 } from "lucide-react"
 import { api } from "@/lib/api";
 import type { WorkspaceOutletContext } from "@/pages/workspace/layout";
 
+const TZ = "America/New_York";
+
+function todayInEST(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).formatToParts(new Date());
+  const y = parts.find((p) => p.type === "year")!.value;
+  const m = parts.find((p) => p.type === "month")!.value;
+  const d = parts.find((p) => p.type === "day")!.value;
+  return `${y}-${m}-${d}`;
+}
+
 function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).formatToParts(date);
+  const y = parts.find((p) => p.type === "year")!.value;
+  const m = parts.find((p) => p.type === "month")!.value;
+  const d = parts.find((p) => p.type === "day")!.value;
+  return `${y}-${m}-${d}`;
 }
 
 function displayDate(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00");
+  const date = new Date(dateStr + "T12:00:00");
   return date.toLocaleDateString("en-US", {
+    timeZone: TZ,
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -31,7 +46,7 @@ interface Task {
 
 export function Component() {
   const { workspace } = useOutletContext<WorkspaceOutletContext>();
-  const [currentDate, setCurrentDate] = useState(formatDate(new Date()));
+  const [currentDate, setCurrentDate] = useState(todayInEST());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskText, setNewTaskText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -80,7 +95,7 @@ export function Component() {
   }
 
   function shiftDate(days: number) {
-    const date = new Date(currentDate + "T00:00:00");
+    const date = new Date(currentDate + "T12:00:00");
     date.setDate(date.getDate() + days);
     setCurrentDate(formatDate(date));
   }
@@ -102,7 +117,7 @@ export function Component() {
           variant="outline"
           size="sm"
           className="ml-2 text-xs"
-          onClick={() => setCurrentDate(formatDate(new Date()))}
+          onClick={() => setCurrentDate(todayInEST())}
         >
           Today
         </Button>
