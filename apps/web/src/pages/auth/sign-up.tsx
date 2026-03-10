@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router";
-import { signUp } from "@/lib/auth-client";
+import { signUp, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ export function Component() {
   const prefillEmail = searchParams.get("email") || "";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { refetch } = useSession();
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,6 +34,7 @@ export function Component() {
       return;
     }
 
+    await refetch();
     navigate(redirect || "/");
   }
 
