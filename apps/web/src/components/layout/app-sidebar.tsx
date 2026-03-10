@@ -29,12 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Plus,
@@ -49,6 +43,7 @@ import {
   Trash2,
   Pencil,
   FolderOpen,
+  MoreHorizontal,
 } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useTheme } from "@/components/layout/theme-provider";
@@ -250,60 +245,65 @@ export function AppSidebar({
         {/* Spaces List */}
         <div className="space-y-0.5">
           {allWorkspaces.map((ws) => (
-            <ContextMenu key={ws.publicId}>
-              <ContextMenuTrigger asChild>
-                <button
-                  onClick={() => navigate(`/w/${ws.publicId}`)}
-                  className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
-                    ws.publicId === params.workspaceId
-                      ? "bg-accent text-accent-foreground font-medium"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
-                  }`}
-                >
-                  <FolderOpen className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{ws.name}</span>
-                  {usersInWorkspace(ws.publicId).length > 0 && (
-                    <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      {usersInWorkspace(ws.publicId).length}
-                    </span>
-                  )}
-                </button>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuItem
-                  onClick={() =>
-                    openDialog({
-                      type: "renameSpace",
-                      publicId: ws.publicId,
-                      currentName: ws.name,
-                    })
-                  }
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Rename
-                </ContextMenuItem>
-                <ContextMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() =>
-                    openDialog({
-                      type: "deleteSpace",
-                      publicId: ws.publicId,
-                      name: ws.name,
-                    })
-                  }
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+            <div key={ws.publicId} className="group/space relative flex items-center">
+              <button
+                onClick={() => navigate(`/w/${ws.publicId}`)}
+                className={`flex w-full items-center gap-2 rounded-md px-2 py-2 sm:py-1.5 pr-8 text-sm transition-colors active:bg-accent/70 ${
+                  ws.publicId === params.workspaceId
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                }`}
+              >
+                <FolderOpen className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
+                <span className="truncate">{ws.name}</span>
+                {usersInWorkspace(ws.publicId).length > 0 && (
+                  <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {usersInWorkspace(ws.publicId).length}
+                  </span>
+                )}
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="absolute right-1 p-1 rounded-md opacity-100 sm:opacity-0 sm:group-hover/space:opacity-100 sm:group-focus-within/space:opacity-100 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-opacity">
+                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" side="right">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      openDialog({
+                        type: "renameSpace",
+                        publicId: ws.publicId,
+                        currentName: ws.name,
+                      })
+                    }
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() =>
+                      openDialog({
+                        type: "deleteSpace",
+                        publicId: ws.publicId,
+                        name: ws.name,
+                      })
+                    }
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ))}
           <button
             onClick={() => openDialog({ type: "createSpace" })}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground transition-colors"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-2 sm:py-1.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground active:bg-accent/70 transition-colors"
           >
-            <Plus className="h-3.5 w-3.5 shrink-0" />
+            <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
             <span>New space</span>
           </button>
         </div>
@@ -331,8 +331,8 @@ export function AppSidebar({
             <SidebarGroup>
               <div className="flex items-center justify-between px-2">
                 <SidebarGroupLabel className="p-0">Pages</SidebarGroupLabel>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleNewPage}>
-                  <Plus className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-6 sm:w-6" onClick={handleNewPage}>
+                  <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                 </Button>
               </div>
               <SidebarGroupContent>

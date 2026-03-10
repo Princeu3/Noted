@@ -1,18 +1,19 @@
 import { useNavigate, useParams } from "react-router";
 import {
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
 } from "@/components/ui/sidebar";
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FileText, ChevronRight, Trash2 } from "lucide-react";
+import { FileText, ChevronRight, Trash2, MoreHorizontal } from "lucide-react";
 import { api } from "@/lib/api";
 import type { PageTreeNode } from "@/hooks/use-page-tree";
 import { usePresence } from "@/components/presence/presence-provider";
@@ -71,40 +72,44 @@ function PageTreeItem({
     }
   }
 
-  const contextMenu = (
-    <ContextMenuContent>
-      <ContextMenuItem onClick={handleDelete} className="text-destructive">
-        <Trash2 className="mr-2 h-4 w-4" />
-        Delete
-      </ContextMenuItem>
-    </ContextMenuContent>
+  const actionMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuAction showOnHover>
+          <MoreHorizontal />
+          <span className="sr-only">More</span>
+        </SidebarMenuAction>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="start">
+        <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 
   if (hasChildren) {
     return (
       <SidebarMenuItem>
         <Collapsible defaultOpen className="group/collapsible">
-          <ContextMenu>
-            <ContextMenuTrigger asChild>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton
-                  isActive={isActive}
-                  onClick={() => navigate(`/w/${workspaceId}/p/${page.publicId}`)}
-                  className="gap-2"
-                >
-                  <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                  <span className="text-sm">{page.icon || ""}</span>
-                  <span className="truncate">{page.title}</span>
-                  {pageUsers.length > 0 && (
-                    <span className="ml-auto shrink-0">
-                      <PresenceAvatars users={pageUsers} max={3} size="sm" />
-                    </span>
-                  )}
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-            </ContextMenuTrigger>
-            {contextMenu}
-          </ContextMenu>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton
+              isActive={isActive}
+              onClick={() => navigate(`/w/${workspaceId}/p/${page.publicId}`)}
+              className="gap-2"
+            >
+              <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+              <span className="text-sm">{page.icon || ""}</span>
+              <span className="truncate">{page.title}</span>
+              {pageUsers.length > 0 && (
+                <span className="ml-auto shrink-0">
+                  <PresenceAvatars users={pageUsers} max={3} size="sm" />
+                </span>
+              )}
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          {actionMenu}
           <CollapsibleContent>
             <SidebarMenuSub>
               {page.children.map((child) => (
@@ -124,24 +129,20 @@ function PageTreeItem({
 
   return (
     <SidebarMenuItem>
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <SidebarMenuButton
-            isActive={isActive}
-            onClick={() => navigate(`/w/${workspaceId}/p/${page.publicId}`)}
-            className="gap-2"
-          >
-            <FileText className="h-4 w-4" />
-            <span className="truncate">{page.title}</span>
-            {pageUsers.length > 0 && (
-              <span className="ml-auto shrink-0">
-                <PresenceAvatars users={pageUsers} max={3} size="sm" />
-              </span>
-            )}
-          </SidebarMenuButton>
-        </ContextMenuTrigger>
-        {contextMenu}
-      </ContextMenu>
+      <SidebarMenuButton
+        isActive={isActive}
+        onClick={() => navigate(`/w/${workspaceId}/p/${page.publicId}`)}
+        className="gap-2"
+      >
+        <FileText className="h-4 w-4" />
+        <span className="truncate">{page.title}</span>
+        {pageUsers.length > 0 && (
+          <span className="ml-auto shrink-0">
+            <PresenceAvatars users={pageUsers} max={3} size="sm" />
+          </span>
+        )}
+      </SidebarMenuButton>
+      {actionMenu}
     </SidebarMenuItem>
   );
 }

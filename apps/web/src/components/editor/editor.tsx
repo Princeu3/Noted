@@ -67,7 +67,7 @@ function StatusIndicator({ status }: { status: ConnectionStatus }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-background/80 backdrop-blur-sm px-3 py-1.5 shadow-sm cursor-default select-none transition-all hover:shadow-md">
+          <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-50 flex items-center gap-2 rounded-full border border-border bg-background/80 backdrop-blur-sm px-3 py-1.5 shadow-sm cursor-default select-none transition-all hover:shadow-md">
             <span className={`h-2 w-2 rounded-full ${config.color}`} />
             <span className="text-xs text-muted-foreground">{config.icon}</span>
           </div>

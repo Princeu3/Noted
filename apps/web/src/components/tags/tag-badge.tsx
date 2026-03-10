@@ -20,8 +20,8 @@ export function TagBadge({ name, color, onRemove }: TagBadgeProps) {
       />
       {name}
       {onRemove && (
-        <button onClick={onRemove} className="ml-0.5 hover:opacity-70">
-          <X className="h-3 w-3" />
+        <button onClick={onRemove} className="ml-0.5 hover:opacity-70 active:opacity-70 p-0.5 -m-0.5 rounded-sm">
+          <X className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
         </button>
       )}
     </Badge>

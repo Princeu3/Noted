@@ -88,8 +88,8 @@ export function TagManager({ pagePublicId, workspaceId }: TagManagerProps) {
       ))}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-6 px-1.5">
-            <Plus className="h-3 w-3" />
+          <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-6 sm:w-auto sm:px-1.5 p-0">
+            <Plus className="h-4 w-4 sm:h-3 sm:w-3" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">

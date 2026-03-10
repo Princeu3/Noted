@@ -104,19 +104,21 @@ export function Component() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-4 py-3 flex items-center gap-3">
-        <Calendar className="h-5 w-5 text-muted-foreground" />
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => shiftDate(-1)}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <span className="text-sm font-medium">{displayDate(currentDate)}</span>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => shiftDate(1)}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+      <div className="border-b border-border px-3 py-2 sm:px-4 sm:py-3 flex items-center gap-1.5 sm:gap-3 flex-wrap">
+        <Calendar className="h-5 w-5 text-muted-foreground hidden sm:block" />
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8" onClick={() => shiftDate(-1)}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium whitespace-nowrap">{displayDate(currentDate)}</span>
+          <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8" onClick={() => shiftDate(1)}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
         <Button
           variant="outline"
           size="sm"
-          className="ml-2 text-xs"
+          className="text-xs h-8"
           onClick={() => setCurrentDate(todayInEST())}
         >
           Today
@@ -137,11 +139,12 @@ export function Component() {
               {tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="group flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted/50"
+                  className="group flex items-center gap-3 rounded-md px-3 py-2.5 sm:py-2 hover:bg-muted/50 active:bg-muted/50"
                 >
                   <Checkbox
                     checked={task.isCompleted}
                     onCheckedChange={() => toggleTask(task)}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <input
                     value={task.text}
@@ -155,9 +158,9 @@ export function Component() {
                   />
                   <button
                     onClick={() => deleteTask(task.id)}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-muted-foreground hover:text-destructive active:text-destructive transition-opacity p-1.5 -m-1.5 rounded-md"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))}

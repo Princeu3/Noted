@@ -140,22 +140,22 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
                   </Avatar>
                   <span className="truncate">{inv.email}</span>
                 </div>
-                <div className="flex shrink-0">
+                <div className="flex shrink-0 gap-0.5">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-8 w-8 sm:h-7 sm:w-7"
                     onClick={() => copyInviteLink(inv.id)}
                   >
-                    {copiedId === inv.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    {copiedId === inv.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-8 w-8 sm:h-7 sm:w-7"
                     onClick={() => handleCancelInvitation(inv.id)}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -185,10 +185,10 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 shrink-0"
+                    className="h-8 w-8 sm:h-7 sm:w-7 shrink-0"
                     onClick={() => handleRemoveMember(member.id)}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>

@@ -67,14 +67,14 @@ export function Component() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="mx-auto max-w-4xl w-full px-4 pt-12">
+      <div className="mx-auto max-w-4xl w-full px-4 pt-6 sm:pt-12">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={(e) => updateTitle(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           placeholder="Untitled"
-          className="w-full bg-transparent text-4xl font-bold outline-none placeholder:text-muted-foreground/50"
+          className="w-full bg-transparent text-3xl sm:text-4xl font-bold outline-none placeholder:text-muted-foreground/50"
         />
         <div className="mt-3">
           <TagManager pagePublicId={page.publicId} workspaceId={page.workspaceId} />
