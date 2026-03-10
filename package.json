@@ -1,5 +1,11 @@
 {
   "name": "noted",
+  "description": "A modern, real-time collaborative note-taking platform",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NCompasBusiness/Noted.git"
+  },
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
