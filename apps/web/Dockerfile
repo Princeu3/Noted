@@ -24,7 +24,6 @@ WORKDIR /app
 RUN npm install -g serve
 COPY --from=build /app/apps/web/dist ./dist
 
-ENV PORT=3000
 EXPOSE 3000
 
-CMD ["serve", "dist", "-s", "-l", "3000"]
+CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT:-3000}"]
